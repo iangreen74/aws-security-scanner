@@ -7,12 +7,12 @@ on:
       - completed
   push:
     branches:
-      - main # ✅ Ensure deployment runs on pushes to main
+      - main # ✅ Allow deployment on direct push to main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }} # ✅ Only run if tests pass
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }} # ✅ Ensure deployment runs on success OR push
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
