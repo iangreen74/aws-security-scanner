@@ -30,17 +30,17 @@ jobs:
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r requirements.txt -t .
 
       - name: Package Lambda Function
         run: |
-          zip -r lambda_function.zip src/ deployment/lambda_function.py
+          cp deployment/lambda_function.py .  # ✅ Move lambda_function.py to root
+          zip -r lambda_function.zip . -x "*.git*" "*.github*" "tests/*" "deployment/*"
 
       - name: Deploy to AWS Lambda
         run: |
           FUNCTION_NAME="SecurityScanner"
 
-          # Check if the function exists
           if aws lambda get-function --function-name $FUNCTION_NAME 2>&1 | grep -q "ResourceNotFoundException"; then
             echo "Lambda function does not exist. Creating..."
             aws lambda create-function \
