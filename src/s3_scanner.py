@@ -1,5 +1,6 @@
 import boto3
 
+
 def check_s3_security():
     print("[*] Checking S3 security...")
     client = boto3.client('s3')
