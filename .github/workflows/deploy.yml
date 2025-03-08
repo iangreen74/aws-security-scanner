@@ -20,7 +20,11 @@ jobs:
           role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
           role-session-name: GitHubActions
           aws-region: us-east-1
-          audience: sts.amazonaws.com
+
+      - name: Debug AWS Credentials
+        run: |
+          echo "Checking AWS Identity..."
+          aws sts get-caller-identity
 
       - name: Install Dependencies & Package Lambda Functions
         run: |
