@@ -1,4 +1,3 @@
-import pytest
 from src.ec2_scanner import check_ec2_security
 
 

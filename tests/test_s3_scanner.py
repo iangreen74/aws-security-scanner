@@ -1,4 +1,3 @@
-import pytest
 from src.s3_scanner import check_s3_security
 
 
