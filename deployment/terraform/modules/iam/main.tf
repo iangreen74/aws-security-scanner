@@ -1,5 +1,10 @@
-resource "aws_iam_role" "lambda_exec" {
+data "aws_iam_role" "existing_lambda_exec" {
   name = "SecurityScannerLambdaRole"
+}
+
+resource "aws_iam_role" "lambda_exec" {
+  count = length(data.aws_iam_role.existing_lambda_exec) > 0 ? 0 : 1 # ✅ Avoids duplicate role creation
+  name  = "SecurityScannerLambdaRole"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -15,7 +20,12 @@ resource "aws_iam_role" "lambda_exec" {
   })
 }
 
+data "aws_iam_policy" "existing_lambda_sns_publish" {
+  name = "LambdaSNSPublishPolicy"
+}
+
 resource "aws_iam_policy" "lambda_sns_publish" {
+  count       = length(data.aws_iam_policy.existing_lambda_sns_publish) > 0 ? 0 : 1 # ✅ Avoids duplicate policy creation
   name        = "LambdaSNSPublishPolicy"
   description = "Allows Lambda to publish to SNS"
 
@@ -29,14 +39,4 @@ resource "aws_iam_policy" "lambda_sns_publish" {
       }
     ]
   })
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_sns_attach" {
-  role       = aws_iam_role.lambda_exec.name
-  policy_arn = aws_iam_policy.lambda_sns_publish.arn
-}
-
-# Output IAM Role ARN for Lambda
-output "lambda_role_arn" {
-  value = aws_iam_role.lambda_exec.arn
 }
