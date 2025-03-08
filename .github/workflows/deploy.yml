@@ -37,6 +37,19 @@ jobs:
       - name: Verify AWS Authentication
         run: aws sts get-caller-identity # ✅ Ensure AWS credentials are working
 
+      - name: Package Lambda Functions
+        run: |
+          cd deployment
+          mkdir -p lambda_packages
+
+          for dir in lambda_iam lambda_report lambda_ec2 lambda_s3; do
+            mkdir -p lambda_packages/$dir
+            pip install -r lambda/$dir/requirements.txt -t lambda_packages/$dir/  # ✅ Install dependencies
+            cp lambda/$dir/lambda_function.py lambda_packages/$dir/  # ✅ Copy handler
+            cd lambda_packages/$dir && zip -r ../../terraform/modules/$dir/lambda_function.zip .  # ✅ Create ZIP
+            cd ../../
+          done
+
       - name: Install Terraform # ✅ Ensures Terraform is installed on the GitHub runner
         uses: hashicorp/setup-terraform@v2
         with:
