@@ -1,21 +1,11 @@
-import boto3
-import json
-import os
+import pytest
+from src.ec2_scanner import lambda_handler  # ✅ Correct function import
 
-s3_client = boto3.client("s3")
-ec2_client = boto3.client("ec2")
-
-BUCKET_NAME = os.environ.get("SECURITY_REPORT_BUCKET")
-
-def lambda_handler(event, context):
-    findings = []
-
-    security_groups = ec2_client.describe_security_groups()["SecurityGroups"]
-    for sg in security_groups:
-        for rule in sg.get("IpPermissions", []):
-            if rule.get("IpRanges") and any(ip["CidrIp"] == "0.0.0.0/0" for ip in rule["IpRanges"]):
-                findings.append(f"Security Group {sg['GroupId']} allows open access!")
-
-    s3_client.put_object(Bucket=BUCKET_NAME, Key="ec2_findings.json", Body=json.dumps(findings))
+def test_ec2_scanner():
+    event = {}
+    context = {}
+    response = lambda_handler(event, context)
     
-    return {"statusCode": 200, "body": json.dumps(findings)}
+    assert isinstance(response, dict)
+    assert "statusCode" in response
+    assert response["statusCode"] == 200
