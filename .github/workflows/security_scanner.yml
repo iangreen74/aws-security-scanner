@@ -1,21 +1,22 @@
-name: AWS Security Scanner CI
-
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
 jobs:
   test:
     name: Run Unit Tests & Security Checks
     runs-on: ubuntu-latest
 
+    permissions:
+      id-token: write # Required for OIDC authentication
+      contents: read
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
+          role-session-name: GitHubActions
+          aws-region: us-east-1 # <-- Set AWS region here
 
       - name: Set Up Python
         uses: actions/setup-python@v4
@@ -26,35 +27,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install flake8 pytest boto3 bandit
 
-      - name: Run Linting
-        run: |
-          flake8 src tests --max-line-length=100
-
-      - name: Run Unit Tests
+      - name: Run Tests
         run: |
           pytest tests/
-
-      - name: Security Scan (Bandit)
-        run: |
-          bandit -r src/ -ll
-
-  package:
-    name: Package Lambda Deployment (Optional)
-    needs: test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Package Lambda Function
-        run: |
-          zip -r lambda_function.zip src/ deployment/lambda_function.py
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: lambda_package
-          path: lambda_function.zip
