@@ -2,17 +2,17 @@ name: Deploy AWS Security Scanner
 
 on:
   workflow_run:
-    workflows: ['Test AWS Security Scanner'] # ✅ Ensure this matches your test workflow name
+    workflows: ['Trigger CI/CD'] # ✅ Updated to match the actual workflow name
     types:
       - completed
   push:
     branches:
-      - main # ✅ Allow deployment on direct push to main
+      - main # ✅ Also allows deployment on push
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'push' }} # ✅ Ensure deployment runs on success OR push
+    if: ${{ github.event_name == 'push' || github.event.workflow_run.conclusion == 'success' }} # ✅ Ensures trigger
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
