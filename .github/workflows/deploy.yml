@@ -37,6 +37,11 @@ jobs:
       - name: Verify AWS Authentication
         run: aws sts get-caller-identity # ✅ Ensure AWS credentials are working
 
+      - name: Install Terraform # ✅ Ensures Terraform is installed on the GitHub runner
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0 # ✅ Use the latest stable version
+
       - name: Deploy with Terraform
         run: |
           cd deployment/terraform
