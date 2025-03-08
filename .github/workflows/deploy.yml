@@ -2,25 +2,40 @@ name: Deploy AWS Security Scanner
 
 on:
   workflow_run:
-    workflows: ['AWS Security Scanner CI'] # ✅ Match the exact name of the test workflow
+    workflows: ['Trigger CI/CD'] # ✅ Ensure this matches your test workflow name
     types:
       - completed
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }} # ✅ Ensures deployment runs only if tests pass
+    if: ${{ github.event.workflow_run.conclusion == 'success' }} # ✅ Only run if tests passed
+
+    permissions:
+      id-token: write # ✅ Required for OIDC authentication
+      contents: read
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Debug OIDC Token (Check if GitHub issues a valid OIDC token)
+        run: |
+          curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL"
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+          ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
+
+      - name: Configure AWS Credentials (OIDC Authentication)
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
           role-session-name: GitHubActions
           aws-region: us-east-1
           audience: sts.amazonaws.com
+
+      - name: Verify AWS Authentication
+        run: aws sts get-caller-identity # ✅ Ensure AWS credentials are working
 
       - name: Deploy with Terraform
         run: |
