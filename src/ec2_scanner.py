@@ -1,10 +1,10 @@
 import pytest
-from src.ec2_scanner import lambda_handler  # ✅ Correct function import
+import src.ec2_scanner  # ✅ Import the module, not just the function
 
 def test_ec2_scanner():
     event = {}
     context = {}
-    response = lambda_handler(event, context)
+    response = src.ec2_scanner.lambda_handler(event, context)  # ✅ Call function via module
     
     assert isinstance(response, dict)
     assert "statusCode" in response
