@@ -30,7 +30,8 @@ module "lambda_iam" {
 }
 
 module "lambda_report" {
-  source          = "./modules/lambda_report"
-  lambda_role_arn = module.iam.lambda_role_arn
-  sns_topic_arn   = module.sns.sns_topic_arn
+  source                = "./modules/lambda_report"
+  lambda_role_arn       = module.iam.lambda_role_arn
+  sns_topic_arn         = module.sns.sns_topic_arn
+  lambda_sns_policy_arn = module.iam.lambda_sns_policy_arn
 }
