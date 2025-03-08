@@ -1,6 +1,6 @@
 resource "aws_lambda_function" "lambda_iam" {
   function_name    = "IAMSecurityScanner"
-  role             = aws_iam_role.lambda_exec.arn
+  role             = var.lambda_role_arn # ✅ Uses the variable
   handler          = "lambda_function.lambda_handler"
   runtime          = "python3.9"
   filename         = "${path.module}/lambda_function.zip"

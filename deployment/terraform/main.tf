@@ -24,6 +24,7 @@ module "lambda_s3" {
 
 module "lambda_iam" {
   source                 = "./modules/lambda_iam"
+  lambda_role_arn        = module.iam.lambda_role_arn # ✅ Pass IAM role ARN
   sns_topic_arn          = module.sns.sns_topic_arn
   security_report_bucket = "security-scanner-reports"
 }
