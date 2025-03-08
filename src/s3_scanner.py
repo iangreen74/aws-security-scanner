@@ -1,15 +1,20 @@
 import boto3
+import json
+import os
 
+s3_client = boto3.client("s3")
+BUCKET_NAME = os.environ.get("SECURITY_REPORT_BUCKET")
 
-def check_s3_security():
-    print("[*] Checking S3 security...")
-    client = boto3.client('s3')
+def lambda_handler(event, context):
     findings = []
-
-    buckets = client.list_buckets()['Buckets']
+    buckets = s3_client.list_buckets()["Buckets"]
+    
     for bucket in buckets:
-        acl = client.get_public_access_block(Bucket=bucket['Name'])
-        if not acl['PublicAccessBlockConfiguration']['BlockPublicAcls']:
-            findings.append(f"Bucket '{bucket['Name']}' is publicly accessible!")
+        acl = s3_client.get_bucket_acl(Bucket=bucket["Name"])
+        for grant in acl["Grants"]:
+            if grant["Grantee"].get("URI") == "http://acs.amazonaws.com/groups/global/AllUsers":
+                findings.append(f"Bucket {bucket['Name']} is publicly accessible!")
 
-    return findings
+    s3_client.put_object(Bucket=BUCKET_NAME, Key="s3_findings.json", Body=json.dumps(findings))
+
+    return {"statusCode": 200, "body": json.dumps(findings)}
