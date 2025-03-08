@@ -1,3 +1,14 @@
+name: AWS Security Scanner CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual triggering from GitHub Actions UI
+
 jobs:
   test:
     name: Run Unit Tests & Security Checks
@@ -16,7 +27,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
           role-session-name: GitHubActions
-          aws-region: us-east-1 # <-- Set AWS region here
+          aws-region: us-east-1
 
       - name: Set Up Python
         uses: actions/setup-python@v4
