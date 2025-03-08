@@ -1,10 +1,16 @@
 import json
+import boto3
+
+sns_client = boto3.client("sns")
+SNS_TOPIC_ARN = "arn:aws:sns:us-east-1:418295677815:SecurityAlerts"
 
 def generate_report(findings):
-    """Generate a JSON security report and store it in a writable location (`/tmp/`)."""
-    report_path = "/tmp/security_report.json"  # ✅ Save in `/tmp/` instead of `examples/`
-    
-    with open(report_path, "w") as report_file:
-        json.dump(findings, report_file, indent=4)
-    
-    print(f"✅ Security report saved at {report_path}")
+    """Generate a JSON security report and send as an email via SNS."""
+    report_message = json.dumps(findings, indent=4)
+
+    sns_client.publish(
+        TopicArn=SNS_TOPIC_ARN,
+        Message=report_message,
+        Subject="AWS Security Scan Report"
+    )
+    print("✅ Security report sent via AWS SNS.")
