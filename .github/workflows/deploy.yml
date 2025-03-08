@@ -1,15 +1,3 @@
-name: Deploy AWS Security Scanner
-
-on:
-  workflow_run:
-    workflows: ['AWS Security Scanner CI']
-    types:
-      - completed
-
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
   deploy:
     name: Deploy AWS Security Scanner
@@ -33,11 +21,9 @@ jobs:
           terraform_version: 1.6.0
 
       - name: Initialize Terraform
-        run: |
-          cd terraform
-          terraform init
+        working-directory: deployment/terraform # ✅ Correct path
+        run: terraform init
 
       - name: Apply Terraform Configuration
-        run: |
-          cd terraform
-          terraform apply -auto-approve
+        working-directory: deployment/terraform # ✅ Correct path
+        run: terraform apply -auto-approve
