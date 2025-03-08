@@ -2,7 +2,7 @@ name: Deploy AWS Security Scanner
 
 on:
   workflow_run:
-    workflows: ['Trigger CI/CD'] # ✅ Ensure this matches your test workflow name
+    workflows: ['AWS Security Scanner CI'] # ✅ Ensure this matches your test workflow name
     types:
       - completed
 
