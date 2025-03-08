@@ -3,7 +3,7 @@ data "aws_iam_role" "existing_lambda_exec" {
   name = "SecurityScannerLambdaRole"
 }
 
-# Create the IAM role only if it does NOT already exist
+# Only create the IAM role if it does not exist
 resource "aws_iam_role" "lambda_exec" {
   count = can(data.aws_iam_role.existing_lambda_exec.arn) ? 0 : 1 # ✅ Corrected check
 
