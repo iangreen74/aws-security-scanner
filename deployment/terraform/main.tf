@@ -14,7 +14,7 @@ module "iam" {
 
 module "lambda" {
   source          = "./modules/lambda"
-  lambda_role_arn = module.iam.lambda_role_arn
+  lambda_role_arn = module.iam.lambda_role_arn # ✅ This now correctly references the IAM module output
   lambda_package  = "my-code.zip"
   sns_topic_arn   = module.sns.sns_topic_arn
 }
