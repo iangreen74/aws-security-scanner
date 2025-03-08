@@ -8,12 +8,8 @@ resource "aws_lambda_function" "lambda_iam" {
 
   environment {
     variables = {
-      SNS_TOPIC_ARN = aws_sns_topic.security_alerts.arn
+      SNS_TOPIC_ARN          = var.sns_topic_arn
+      SECURITY_REPORT_BUCKET = var.security_report_bucket
     }
   }
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_iam_sns" {
-  role       = aws_iam_role.lambda_exec.name
-  policy_arn = aws_iam_policy.lambda_sns_publish.arn
 }

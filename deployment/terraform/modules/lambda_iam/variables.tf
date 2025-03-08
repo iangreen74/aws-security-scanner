@@ -4,6 +4,11 @@ variable "lambda_role_arn" {
 }
 
 variable "sns_topic_arn" {
-  description = "SNS Topic ARN for notifications"
+  description = "ARN of the SNS topic for security notifications"
+  type        = string
+}
+
+variable "security_report_bucket" {
+  description = "S3 bucket for storing security reports"
   type        = string
 }
