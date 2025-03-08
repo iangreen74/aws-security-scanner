@@ -18,6 +18,9 @@ jobs:
       id-token: write # Required for OIDC authentication
       contents: read
 
+    env:
+      NODE_OPTIONS: '--no-warnings' # Suppresses AWS SDK v2 warning
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
