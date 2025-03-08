@@ -1,7 +1,11 @@
-from src.s3_scanner import check_s3_security
-
+import pytest
+from src.s3_scanner import lambda_handler  # ✅ Correct function import
 
 def test_s3_scanner():
-    """Test that S3 scanner runs without errors and returns a list."""
-    result = check_s3_security()
-    assert isinstance(result, list)
+    event = {}
+    context = {}
+    response = lambda_handler(event, context)
+    
+    assert isinstance(response, dict)
+    assert "statusCode" in response
+    assert response["statusCode"] == 200

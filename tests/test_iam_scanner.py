@@ -1,7 +1,11 @@
-from src.iam_scanner import check_iam_security
-
+import pytest
+from src.iam_scanner import lambda_handler  # ✅ Correct function import
 
 def test_iam_scanner():
-    """Test that IAM scanner runs without errors and returns a list."""
-    result = check_iam_security()
-    assert isinstance(result, list)  # Ensures the function returns a list
+    event = {}
+    context = {}
+    response = lambda_handler(event, context)
+    
+    assert isinstance(response, dict)
+    assert "statusCode" in response
+    assert response["statusCode"] == 200
