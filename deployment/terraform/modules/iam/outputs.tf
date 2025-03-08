@@ -1,3 +1,3 @@
 output "lambda_role_arn" {
-  value = aws_iam_role.lambda_exec[0].arn # Ensure it's referencing the IAM role
+  value = can(data.aws_iam_role.existing_lambda_exec.arn) ? data.aws_iam_role.existing_lambda_exec.arn : aws_iam_role.lambda_exec[0].arn
 }
