@@ -19,9 +19,7 @@ module "lambda_ec2" {
 }
 
 module "lambda_s3" {
-  source                 = "./modules/lambda_s3"
-  lambda_role_arn        = module.iam.lambda_role_arn
-  security_report_bucket = "security-scanner-reports"
+  source = "./modules/lambda_s3"
 }
 
 module "lambda_iam" {
