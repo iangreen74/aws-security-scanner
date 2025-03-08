@@ -2,12 +2,12 @@ name: Deploy AWS Security Scanner
 
 on:
   workflow_run:
-    workflows: ['AWS Security Scanner CI'] # ✅ Ensure this matches your test workflow name
+    workflows: ['AWS Security Scanner CI']
     types:
       - completed
   push:
     branches:
-      - main # ✅ This ensures deployment can run on push to main
+      - main # ✅ Ensures deployment runs on main branch push
 
 permissions:
   id-token: write
@@ -30,15 +30,22 @@ jobs:
           role-session-name: GitHubActions
           aws-region: us-east-1
 
+      - name: Install Dependencies & Package Lambda
+        run: |
+          cd deployment
+          pip install -r lambda/requirements.txt -t lambda_package/
+          cp lambda/lambda_function.py lambda_package/  # ✅ Ensure Lambda handler is included
+          cd lambda_package && zip -r ../terraform/my-code.zip .  # ✅ Move ZIP to Terraform folder
+
       - name: Install Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.6.0
 
       - name: Initialize Terraform
-        working-directory: deployment/terraform # ✅ Correct path
+        working-directory: deployment/terraform # ✅ Ensure Terraform runs in the right folder
         run: terraform init
 
       - name: Apply Terraform Configuration
-        working-directory: deployment/terraform # ✅ Correct path
+        working-directory: deployment/terraform # ✅ Ensure Terraform runs in the right folder
         run: terraform apply -auto-approve
