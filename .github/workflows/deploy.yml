@@ -2,7 +2,7 @@ name: Deploy AWS Security Scanner
 
 on:
   workflow_run:
-    workflows: ['AWS Security Scanner CI'] # 👈 Name of your test workflow
+    workflows: ['AWS Security Scanner CI'] # Ensures tests pass first
     types:
       - completed
 
@@ -14,7 +14,7 @@ jobs:
   deploy:
     name: Deploy to AWS Lambda
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }} # 👈 Deploy only if tests pass
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout Repository
@@ -38,4 +38,23 @@ jobs:
 
       - name: Deploy to AWS Lambda
         run: |
-          aws lambda update-function-code --function-name SecurityScanner --zip-file fileb://lambda_function.zip
+          FUNCTION_NAME="SecurityScanner"
+
+          # Check if the function exists
+          if aws lambda get-function --function-name $FUNCTION_NAME 2>&1 | grep -q "ResourceNotFoundException"; then
+            echo "Lambda function does not exist. Creating..."
+            aws lambda create-function \
+              --function-name $FUNCTION_NAME \
+              --runtime python3.9 \
+              --role arn:aws:iam::418295677815:role/GitHubActionsRole \
+              --handler lambda_function.lambda_handler \
+              --timeout 15 \
+              --memory-size 128 \
+              --zip-file fileb://lambda_function.zip \
+              --region us-east-1
+          else
+            echo "Lambda function exists. Updating..."
+            aws lambda update-function-code \
+              --function-name $FUNCTION_NAME \
+              --zip-file fileb://lambda_function.zip
+          fi
