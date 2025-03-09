@@ -32,7 +32,7 @@ module "lambda_s3" {
 
 module "lambda_iam" {
   source                 = "./modules/lambda_iam"
-  lambda_role_arn        = aws_iam_role.lambda_exec.arn
+  lambda_role_arn        = aws_iam_role.lambda_exec.arn # ✅ Now properly defined
   lambda_suffix          = random_string.lambda_suffix.result
   sns_topic_arn          = module.sns.sns_topic_arn
   security_report_bucket = module.lambda_s3.bucket_name
@@ -40,8 +40,8 @@ module "lambda_iam" {
 
 module "lambda_report" {
   source                = "./modules/lambda_report"
-  lambda_role_arn       = aws_iam_role.lambda_exec.arn
+  lambda_role_arn       = aws_iam_role.lambda_exec.arn # ✅ Now properly defined
   lambda_suffix         = random_string.lambda_suffix.result
-  sns_topic_arn         = module.sns.sns_topic_arn         # ✅ Add missing sns_topic_arn
-  lambda_sns_policy_arn = module.iam.lambda_sns_policy_arn # ✅ Add missing lambda_sns_policy_arn
+  sns_topic_arn         = module.sns.sns_topic_arn
+  lambda_sns_policy_arn = module.iam.lambda_sns_policy_arn
 }
