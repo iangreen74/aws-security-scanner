@@ -2,26 +2,36 @@ name: Deploy AWS Security Scanner
 
 on:
   workflow_run:
-    workflows: ['AWS Security Scanner CI'] # ✅ Ensure it matches test workflow name
+    workflows: ['AWS Security Scanner CI']
     types:
       - completed
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }} # ✅ Ensures deployment only runs if tests pass
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Try OIDC Authentication (Preferred)
+        id: oidc_auth
+        continue-on-error: true # ✅ Allows fallback if this step fails
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
           role-session-name: GitHubActions
           aws-region: us-east-1
 
-      - name: Debug AWS Credentials
+      - name: Fallback to Access Keys if OIDC Fails
+        if: steps.oidc_auth.outcome != 'success' # ✅ Only runs if OIDC fails
+        run: |
+          echo "OIDC authentication failed. Using Access Keys as fallback."
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
+
+      - name: Debug AWS Authentication
         run: |
           echo "Checking AWS Identity..."
           aws sts get-caller-identity
@@ -34,10 +44,10 @@ jobs:
           for dir in lambda_iam lambda_report lambda_ec2 lambda_s3; do
             mkdir -p lambda_packages/$dir
             if [[ -f terraform/modules/$dir/requirements.txt ]]; then
-              pip install -r terraform/modules/$dir/requirements.txt -t lambda_packages/$dir/  # ✅ Install dependencies if exists
+              pip install -r terraform/modules/$dir/requirements.txt -t lambda_packages/$dir/
             fi
-            cp src/${dir}_scanner.py lambda_packages/$dir/lambda_function.py  # ✅ Copy handler
-            cd lambda_packages/$dir && zip -r ../../terraform/modules/$dir/lambda_function.zip .  # ✅ Create ZIP
+            cp src/${dir}_scanner.py lambda_packages/$dir/lambda_function.py
+            cd lambda_packages/$dir && zip -r ../../terraform/modules/$dir/lambda_function.zip .
             cd ../../
           done
 
