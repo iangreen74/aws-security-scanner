@@ -112,39 +112,16 @@ jobs:
             echo "⚠️ IAM Role $ROLE_NAME does not exist. Terraform will create a new one."
           fi
 
-      - name: Import Existing Lambda Functions into Terraform
-        run: |
-          cd deployment/terraform
-          echo "🔍 Checking for existing Lambda functions..."
-          for FUNCTION in IAMSecurityScanner ReportGenerator EC2Scanner S3Scanner; do
-            if aws lambda get-function --function-name "$FUNCTION" > /dev/null 2>&1; then
-              echo "✅ Lambda function $FUNCTION exists. Importing into Terraform..."
-              case "$FUNCTION" in
-                IAMSecurityScanner)
-                  terraform import module.lambda_iam.aws_lambda_function.lambda_iam "$FUNCTION" || echo "⚠️ Skipping import for $FUNCTION as it may not exist in state."
-                  ;;
-                ReportGenerator)
-                  terraform import module.lambda_report.aws_lambda_function.lambda_report "$FUNCTION" || echo "⚠️ Skipping import for $FUNCTION as it may not exist in state."
-                  ;;
-                EC2Scanner)
-                  terraform import module.lambda_ec2.aws_lambda_function.ec2_scanner "$FUNCTION" || echo "⚠️ Skipping import for $FUNCTION as it may not exist in state."
-                  ;;
-                S3Scanner)
-                  terraform import module.lambda_s3.aws_lambda_function.s3_scanner "$FUNCTION" || echo "⚠️ Skipping import for $FUNCTION as it may not exist in state."
-                  ;;
-              esac
-            else
-              echo "⚠️ Lambda function $FUNCTION does not exist. Terraform will create a new one."
-            fi
-          done
-
       - name: Deploy with Terraform
         run: |
           cd deployment/terraform
           terraform init
-          terraform plan -out=tfplan
+
+          echo "🔍 Running Terraform Plan..."
+          terraform plan -var="lambda_role_arn=$ROLE_ARN" -out=tfplan
           terraform show tfplan > plan.txt
           cat plan.txt
+
           terraform show -json tfplan > plan.json
           cat plan.json
 
@@ -153,7 +130,7 @@ jobs:
             exit 1
           fi
 
-          terraform apply -auto-approve
+          terraform apply -var="lambda_role_arn=$ROLE_ARN" -auto-approve
 
       - name: Cleanup Unused Lambda Functions (Optional)
         run: |

@@ -5,12 +5,14 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
+# Fetch existing IAM Role (if it exists)
 data "aws_iam_role" "existing" {
   name = "LambdaExecutionRole"
 }
 
+# Create IAM Role if it does NOT exist
 resource "aws_iam_role" "lambda_exec" {
-  count = length(data.aws_iam_role.existing) > 0 ? 0 : 1 # ✅ Create only if it doesn't exist
+  count = data.aws_iam_role.existing.id != "" ? 0 : 1 # ✅ Create only if role is missing
   name  = "LambdaExecutionRole"
 
   assume_role_policy = jsonencode({
@@ -25,9 +27,10 @@ resource "aws_iam_role" "lambda_exec" {
   })
 }
 
+# Attach Basic Lambda Execution Role
 resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   count      = length(aws_iam_role.lambda_exec) > 0 ? 1 : 0 # ✅ Only attach if role exists
-  role       = aws_iam_role.lambda_exec[count.index].name
+  role       = aws_iam_role.lambda_exec[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
@@ -49,17 +52,12 @@ resource "aws_iam_policy" "lambda_sns_publish" {
 # Attach the IAM Policy to the IAM Role
 resource "aws_iam_role_policy_attachment" "lambda_sns_attach" {
   count      = length(aws_iam_role.lambda_exec) > 0 ? 1 : 0 # ✅ Only attach if role exists
-  role       = aws_iam_role.lambda_exec[count.index].name
+  role       = aws_iam_role.lambda_exec[0].name
   policy_arn = aws_iam_policy.lambda_sns_publish.arn
 }
 
-# Ensure IAM Role and Policy Cleanup Before Creating New Ones
-resource "null_resource" "iam_cleanup" {
-  provisioner "local-exec" {
-    command = <<EOT
-      aws iam delete-role-policy --role-name ${aws_iam_role.lambda_exec[0].name} --policy-name ${aws_iam_policy.lambda_sns_publish.name} || true
-      aws iam detach-role-policy --role-name ${aws_iam_role.lambda_exec[0].name} --policy-arn ${aws_iam_policy.lambda_sns_publish.arn} || true
-      aws iam delete-role --role-name ${aws_iam_role.lambda_exec[0].name} || true
-    EOT
-  }
+# OUTPUTS
+output "lambda_role_arn" {
+  description = "ARN of the Lambda Execution Role"
+  value       = length(aws_iam_role.lambda_exec) > 0 ? aws_iam_role.lambda_exec[0].arn : data.aws_iam_role.existing.arn
 }
