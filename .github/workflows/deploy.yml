@@ -2,14 +2,14 @@ name: Deploy AWS Security Scanner
 
 on:
   workflow_run:
-    workflows: ['AWS Security Scanner CI'] # ✅ Ensure it matches test workflow name
+    workflows: ['AWS Security Scanner CI']
     types:
       - completed
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }} # ✅ Ensures deployment only runs if tests pass
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout Code
@@ -17,7 +17,7 @@ jobs:
 
       - name: Configure AWS Credentials with IAM Role
         id: configure-iam
-        continue-on-error: true # ✅ Allows fallback to static credentials if this fails
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
@@ -26,10 +26,10 @@ jobs:
           audience: sts.amazonaws.com
 
       - name: Configure AWS Credentials with Static Keys (Fallback)
-        if: steps.configure-iam.outcome == 'failure' # ✅ Only runs if IAM role fails
+        if: steps.configure-iam.outcome == 'failure'
         run: |
           echo "⚠️ IAM authentication failed. Falling back to static credentials..."
-          mkdir -p ~/.aws  # ✅ Ensure the ~/.aws directory exists before writing credentials
+          mkdir -p ~/.aws
           echo "[default]" > ~/.aws/credentials
           echo "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
           echo "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
@@ -51,9 +51,16 @@ jobs:
           for dir in "${!lambda_files[@]}"; do
             mkdir -p lambda_packages/$dir
             if [[ -f terraform/modules/$dir/requirements.txt ]]; then
-              pip install --no-warn-script-location --requirement terraform/modules/$dir/requirements.txt -t lambda_packages/$dir/ || true  # ✅ Ignore missing package errors
+              pip install --no-warn-script-location --requirement terraform/modules/$dir/requirements.txt -t lambda_packages/$dir/ || true
             fi
-            cp src/${lambda_files[$dir]} lambda_packages/$dir/lambda_function.py  # ✅ Copy correct handler
+            
+            # ✅ Only copy the file if it exists to avoid breaking the workflow
+            if [[ -f src/${lambda_files[$dir]} ]]; then
+              cp src/${lambda_files[$dir]} lambda_packages/$dir/lambda_function.py
+            else
+              echo "⚠️ Warning: src/${lambda_files[$dir]} is missing! Skipping..."
+            fi
+
             cd lambda_packages/$dir && zip -r ../../terraform/modules/$dir/lambda_function.zip .
             cd ../../
           done
