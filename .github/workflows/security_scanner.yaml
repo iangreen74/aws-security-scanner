@@ -56,5 +56,5 @@ jobs:
           if [ -d tests ]; then pytest tests/; else echo "⚠️ No tests directory found, skipping tests."; fi
 
   deploy:
-    needs: test # Ensures 'deploy' runs only after 'test' completes successfully
-    uses: your-org/your-repo/.github/workflows/deploy.yaml@main # Update with actual repository details
+    needs: test
+    uses: ./.github/workflows/deploy.yaml
