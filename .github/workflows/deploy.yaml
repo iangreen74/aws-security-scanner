@@ -48,13 +48,6 @@ jobs:
           echo "AWS_REGION=us-east-1" >> $GITHUB_ENV
           echo "✅ AWS credentials set."
 
-      - name: Verify AWS Credentials
-        run: |
-          echo "🔍 Checking AWS credentials..."
-          echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:0:4}********"
-          echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:0:4}********"
-          aws sts get-caller-identity
-
       - name: Install Dependencies & Package Lambda Functions
         run: |
           cd deployment
@@ -76,7 +69,7 @@ jobs:
             if [[ -f ../src/${lambda_files[$dir]} ]]; then
               echo "✅ Copying ../src/${lambda_files[$dir]} to lambda_packages/$dir/"
               cp ../src/${lambda_files[$dir]} lambda_packages/$dir/lambda_function.py
-              cd lambda_packages/$dir && zip -r ../../terraform/modules/$dir/lambda_function.zip .
+              cd lambda_packages/$dir && zip -r lambda_function.zip . && mv lambda_function.zip ../../terraform/modules/$dir/
               cd ../../
             else
               echo "❌ Error: Required source file ../src/${lambda_files[$dir]} is missing! Aborting deployment."
@@ -107,6 +100,14 @@ jobs:
           cd deployment/terraform
           terraform init
           terraform plan -out=tfplan
+          terraform show tfplan > plan.txt
+          cat plan.txt
           terraform show -json tfplan > plan.json
           cat plan.json
+
+          if [[ $? -ne 0 ]]; then
+            echo "❌ Terraform plan failed! Aborting deployment."
+            exit 1
+          fi
+
           terraform apply -auto-approve
