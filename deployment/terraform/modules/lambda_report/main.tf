@@ -1,6 +1,6 @@
 resource "aws_lambda_function" "lambda_report" {
   function_name = "ReportGenerator-${random_string.lambda_suffix.result}"
-  role          = aws_iam_role.lambda_exec.arn
+  role          = var.lambda_role_arn # ✅ Use the IAM role passed as a variable
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
 

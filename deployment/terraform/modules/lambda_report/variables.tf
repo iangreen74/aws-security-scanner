@@ -12,3 +12,8 @@ variable "lambda_sns_policy_arn" {
   description = "IAM Policy ARN allowing Lambda to publish to SNS"
   type        = string
 }
+
+variable "lambda_suffix" {
+  description = "Random string suffix for Lambda function name"
+  type        = string
+}

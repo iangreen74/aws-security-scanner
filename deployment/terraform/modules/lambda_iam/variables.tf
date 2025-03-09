@@ -12,3 +12,8 @@ variable "security_report_bucket" {
   description = "S3 bucket for storing security reports"
   type        = string
 }
+
+variable "lambda_suffix" {
+  description = "Random string suffix for Lambda function name"
+  type        = string
+}

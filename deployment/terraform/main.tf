@@ -2,6 +2,12 @@ provider "aws" {
   region = "us-east-1"
 }
 
+resource "random_string" "lambda_suffix" {
+  length  = 6
+  special = false
+  upper   = false
+}
+
 module "sns" {
   source             = "./modules/sns"
   notification_email = "your-email@example.com"
@@ -23,15 +29,13 @@ module "lambda_s3" {
 }
 
 module "lambda_iam" {
-  source                 = "./modules/lambda_iam"
-  lambda_role_arn        = module.iam.lambda_role_arn # ✅ Pass IAM role ARN
-  sns_topic_arn          = module.sns.sns_topic_arn
-  security_report_bucket = "security-scanner-reports"
+  source          = "./modules/lambda_iam"
+  lambda_role_arn = aws_iam_role.lambda_exec.arn       # ✅ Pass IAM role
+  lambda_suffix   = random_string.lambda_suffix.result # ✅ Pass random suffix
 }
 
 module "lambda_report" {
-  source                = "./modules/lambda_report"
-  lambda_role_arn       = module.iam.lambda_role_arn
-  sns_topic_arn         = module.sns.sns_topic_arn
-  lambda_sns_policy_arn = module.iam.lambda_sns_policy_arn
+  source          = "./modules/lambda_report"
+  lambda_role_arn = aws_iam_role.lambda_exec.arn       # ✅ Pass IAM role
+  lambda_suffix   = random_string.lambda_suffix.result # ✅ Pass random suffix
 }
