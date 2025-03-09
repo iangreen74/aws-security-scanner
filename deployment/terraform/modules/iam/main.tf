@@ -43,3 +43,20 @@ resource "aws_iam_role_policy_attachment" "lambda_sns_attach" {
   role       = aws_iam_role.lambda_exec.name
   policy_arn = aws_iam_policy.lambda_sns_publish.arn
 }
+
+# Ensure IAM Role and Policy Cleanup Before Creating New Ones
+resource "null_resource" "iam_cleanup" {
+  triggers = {
+    lambda_role_name = aws_iam_role.lambda_exec.name
+    policy_name      = aws_iam_policy.lambda_sns_publish.name
+  }
+
+  provisioner "local-exec" {
+    command = <<EOT
+      aws iam delete-role-policy --role-name ${aws_iam_role.lambda_exec.name} --policy-name ${aws_iam_policy.lambda_sns_publish.name} || true
+      aws iam detach-role-policy --role-name ${aws_iam_role.lambda_exec.name} --policy-arn ${aws_iam_policy.lambda_sns_publish.arn} || true
+      aws iam delete-role --role-name ${aws_iam_role.lambda_exec.name} || true
+      aws iam delete-policy --policy-arn ${aws_iam_policy.lambda_sns_publish.arn} || true
+    EOT
+  }
+}

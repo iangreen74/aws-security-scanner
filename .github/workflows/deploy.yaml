@@ -111,3 +111,18 @@ jobs:
           fi
 
           terraform apply -auto-approve
+
+      - name: Cleanup Old Lambda Functions (Optional)
+        run: |
+          echo "🔍 Checking for old Lambda functions to delete..."
+          FUNCTIONS_TO_DELETE=$(aws lambda list-functions --query 'Functions[?starts_with(FunctionName, `IAMSecurityScanner`)].FunctionName' --output text)
+
+          if [[ -z "$FUNCTIONS_TO_DELETE" ]]; then
+            echo "✅ No old Lambda functions to delete."
+          else
+            echo "⚠️ Deleting old Lambda functions..."
+            for FUNCTION in $FUNCTIONS_TO_DELETE; do
+              aws lambda delete-function --function-name "$FUNCTION"
+              echo "🗑 Deleted: $FUNCTION"
+            done
+          fi
