@@ -5,5 +5,5 @@ output "lambda_sns_policy_arn" {
 
 output "lambda_role_arn" {
   description = "ARN of the Lambda Execution Role"
-  value       = length(aws_iam_role.lambda_exec) > 0 ? aws_iam_role.lambda_exec[0].arn : null
+  value       = aws_iam_role.lambda_exec.arn
 }
