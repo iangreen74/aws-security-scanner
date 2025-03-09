@@ -25,9 +25,10 @@ module "lambda_ec2" {
 }
 
 module "lambda_s3" {
-  source      = "./modules/lambda_s3"
-  bucket_name = "my-security-reports-bucket" # Optional: Override default
-  bucket_acl  = "private"
+  source          = "./modules/lambda_s3"
+  bucket_name     = "my-security-reports-bucket" # Optional: Override default
+  bucket_acl      = "private"
+  lambda_role_arn = module.iam.lambda_role_arn
 }
 
 module "lambda_iam" {
