@@ -9,3 +9,8 @@ variable "bucket_acl" {
   type        = string
   default     = "private"
 }
+
+variable "lambda_role_arn" {
+  description = "ARN of the IAM role for the Lambda function"
+  type        = string
+}

@@ -107,7 +107,7 @@ jobs:
             echo "✅ IAM Role $ROLE_NAME exists. Importing into Terraform..."
             terraform init
             terraform import module.iam.aws_iam_role.lambda_exec "$ROLE_NAME" || echo "⚠️ Skipping import for $ROLE_NAME as it may already be in state."
-            terraform refresh  # ✅ Ensures state is up to date
+            terraform apply -refresh-only -auto-approve # ✅ Ensures Terraform sees the IAM role
           else
             echo "⚠️ IAM Role $ROLE_NAME does not exist. Terraform will create a new one."
           fi
