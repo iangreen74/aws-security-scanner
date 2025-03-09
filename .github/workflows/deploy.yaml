@@ -103,7 +103,10 @@ jobs:
           terraform_version: 1.5.0
 
       - name: Deploy with Terraform
-        run: |
-          cd deployment/terraform
-          terraform init
-          terraform apply -auto-approve
+         run: |
+            cd deployment/terraform
+            terraform init
+            terraform plan -out=tfplan
+            terraform show -json tfplan > plan.json
+            cat plan.json
+            terraform apply -auto-approve
