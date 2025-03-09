@@ -1,7 +1,7 @@
 name: Deploy AWS Security Scanner
 
 on:
-  workflow_call:  # Allows this workflow to be called from other workflows
+  workflow_call: # Allows this workflow to be called from other workflows
   workflow_dispatch: # Allows manual triggering from GitHub Actions UI
 
 jobs:
@@ -12,14 +12,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Ensure full repo history is cloned
+          fetch-depth: 0 # Ensure full repo history is cloned
 
-      - name: Debug: Print Current Working Directory & List Files
+      - name: Print Current Working Directory & List Files
         run: |
           echo "📂 Current Directory: $(pwd)"
           ls -R
 
-      - name: Debug: Verify src/ Exists
+      - name: Verify src/ Exists
         run: |
           if [[ -d src ]]; then
             echo "✅ src directory found"
@@ -29,7 +29,7 @@ jobs:
             exit 1
           fi
 
-      - name: Check if report_generator.py exists
+      - name: Check if report_generator.py Exists
         run: |
           if [[ -f src/report_generator.py ]]; then
             echo "✅ report_generator.py found!"
