@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Debug: Check GitHub Secrets Availability
+      - name: Debug Check GitHub Secrets Availability
         run: |
           echo "Checking if AWS credentials are available in GitHub Actions..."
           if [[ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]]; then
@@ -23,7 +23,7 @@ jobs:
           else
             echo "✅ AWS_ACCESS_KEY_ID is available in GitHub Secrets."
           fi
-          
+
           if [[ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]]; then
             echo "❌ AWS_SECRET_ACCESS_KEY is NOT set in GitHub Secrets!"
             exit 1
