@@ -64,7 +64,7 @@ jobs:
           echo "🔍 Checking Terraform state before import..."
           terraform state list || echo "⚠️ No state found."
 
-      - name: **Import IAM Role Without Hanging**
+      - name: Import IAM Role Without Hanging
         run: |
           set -x
           cd deployment/terraform
