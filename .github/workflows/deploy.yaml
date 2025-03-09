@@ -1,7 +1,7 @@
 name: Deploy AWS Security Scanner
 
 on:
-  workflow_call: # Allows this workflow to be called from other workflows
+  workflow_call:  # Allows this workflow to be called from other workflows
   workflow_dispatch: # Allows manual triggering from GitHub Actions UI
 
 jobs:
@@ -9,25 +9,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          lfs: true
+          fetch-depth: 0  # Ensure full repo history is cloned
 
-      - name: Print Current Working Directory
+      - name: Debug: Print Current Working Directory & List Files
         run: |
           echo "📂 Current Directory: $(pwd)"
           ls -R
 
+      - name: Debug: Verify src/ Exists
+        run: |
+          if [[ -d src ]]; then
+            echo "✅ src directory found"
+            ls -R src/
+          else
+            echo "❌ src directory is missing!"
+            exit 1
+          fi
+
       - name: Check if report_generator.py exists
         run: |
-          echo "🔍 Checking for src/report_generator.py..."
-          ls -R src/ || echo "⚠️ src directory is missing!"
           if [[ -f src/report_generator.py ]]; then
             echo "✅ report_generator.py found!"
           else
-            echo "❌ report_generator.py is missing!"
+            echo "❌ report_generator.py is missing! Current directory: $(pwd)"
+            ls -R
             exit 1
           fi
 
@@ -59,13 +67,14 @@ jobs:
               pip install --no-warn-script-location --requirement terraform/modules/$dir/requirements.txt -t lambda_packages/$dir/ || true
             fi
             
-            if [[ -f src/${lambda_files[$dir]} ]]; then
-              echo "✅ Copying src/${lambda_files[$dir]} to lambda_packages/$dir/"
-              cp src/${lambda_files[$dir]} lambda_packages/$dir/lambda_function.py
+            if [[ -f ../src/${lambda_files[$dir]} ]]; then
+              echo "✅ Copying ../src/${lambda_files[$dir]} to lambda_packages/$dir/"
+              cp ../src/${lambda_files[$dir]} lambda_packages/$dir/lambda_function.py
               cd lambda_packages/$dir && zip -r ../../terraform/modules/$dir/lambda_function.zip .
               cd ../../
             else
-              echo "❌ Error: Required source file src/${lambda_files[$dir]} is missing! Aborting deployment."
+              echo "❌ Error: Required source file ../src/${lambda_files[$dir]} is missing! Aborting deployment."
+              ls -R ../src/
               exit 1
             fi
           done
