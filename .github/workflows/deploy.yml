@@ -23,16 +23,24 @@ jobs:
           role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
           role-session-name: GitHubActions
           aws-region: us-east-1
-          audience: sts.amazonaws.com
+
+      - name: Debug IAM Role Authentication
+        if: steps.configure-iam.outcome == 'failure'
+        run: |
+          echo "❌ IAM authentication failed!"
+          echo "Check that your GitHub OIDC provider is set up in AWS IAM."
+          echo "Verify the trust policy of the role: GitHubActionsRole"
 
       - name: Configure AWS Credentials with Static Keys (Fallback)
         if: steps.configure-iam.outcome == 'failure'
         run: |
-          echo "⚠️ IAM authentication failed. Falling back to static credentials..."
+          echo "⚠️ Falling back to static credentials..."
           mkdir -p ~/.aws
           echo "[default]" > ~/.aws/credentials
           echo "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
           echo "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
+          echo "[default]" > ~/.aws/config
+          echo "region = us-east-1" >> ~/.aws/config
           echo "AWS credentials configured successfully!"
 
       - name: Install Dependencies & Package Lambda Functions
@@ -54,7 +62,6 @@ jobs:
               pip install --no-warn-script-location --requirement terraform/modules/$dir/requirements.txt -t lambda_packages/$dir/ || true
             fi
             
-            # ✅ Only copy the file if it exists to avoid breaking the workflow
             if [[ -f src/${lambda_files[$dir]} ]]; then
               cp src/${lambda_files[$dir]} lambda_packages/$dir/lambda_function.py
             else
