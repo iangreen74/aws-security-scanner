@@ -8,11 +8,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_REGION: us-east-1
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -44,8 +39,20 @@ jobs:
             exit 1
           fi
 
+      - name: Set AWS Credentials from GitHub Secrets
+        run: |
+          echo "🔍 Setting AWS credentials..."
+          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          export AWS_REGION=us-east-1
+          echo "✅ AWS credentials set."
+
       - name: Verify AWS Credentials
         run: |
+          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          export AWS_REGION=us-east-1
+
           echo "🔍 Checking AWS credentials..."
           echo "AWS_ACCESS_KEY_ID is set: ${AWS_ACCESS_KEY_ID:0:4}********"
           echo "AWS_SECRET_ACCESS_KEY is set: ${AWS_SECRET_ACCESS_KEY:0:4}********"
@@ -53,6 +60,10 @@ jobs:
 
       - name: Install Dependencies & Package Lambda Functions
         run: |
+          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          export AWS_REGION=us-east-1
+
           cd deployment
           mkdir -p lambda_packages
 
@@ -89,6 +100,10 @@ jobs:
 
       - name: Deploy with Terraform
         run: |
+          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          export AWS_REGION=us-east-1
+
           cd deployment/terraform
           terraform init
           terraform apply -auto-approve
