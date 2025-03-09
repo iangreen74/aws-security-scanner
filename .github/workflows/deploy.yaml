@@ -1,7 +1,7 @@
 name: Deploy AWS Security Scanner
 
 on:
-  workflow_call:  # Allows this workflow to be called from other workflows
+  workflow_call: # Allows this workflow to be called from other workflows
   workflow_dispatch: # Allows manual triggering from GitHub Actions UI
 
 jobs:
@@ -12,9 +12,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Ensure full repo history is cloned
+          fetch-depth: 0 # Ensure full repo history is cloned
 
-      - name: Debug: Check GitHub Secrets Availability
+      - name: Debug Check GitHub Secrets Availability
         run: |
           echo "Checking if AWS credentials are available in GitHub Actions..."
           if [[ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]]; then
@@ -22,13 +22,13 @@ jobs:
           else
             echo "✅ AWS_ACCESS_KEY_ID is available in GitHub Secrets."
           fi
-          
+
           if [[ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]]; then
             echo "❌ AWS_SECRET_ACCESS_KEY is NOT set in GitHub Secrets!"
           else
             echo "✅ AWS_SECRET_ACCESS_KEY is available in GitHub Secrets."
           fi
-          
+
           exit 1  # Intentionally fail if secrets are missing so we can debug
 
       - name: Set AWS Credentials from GitHub Secrets
