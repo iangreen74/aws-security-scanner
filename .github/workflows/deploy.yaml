@@ -104,16 +104,16 @@ jobs:
               echo "✅ Lambda function $FUNCTION exists. Importing into Terraform..."
               case "$FUNCTION" in
                 IAMSecurityScanner)
-                  terraform import -allow-missing module.lambda_iam.aws_lambda_function.lambda_iam "$FUNCTION"
+                  terraform import module.lambda_iam.aws_lambda_function.lambda_iam "$FUNCTION" || echo "⚠️ Skipping import for $FUNCTION as it may not exist in state."
                   ;;
                 ReportGenerator)
-                  terraform import -allow-missing module.lambda_report.aws_lambda_function.lambda_report "$FUNCTION"
+                  terraform import module.lambda_report.aws_lambda_function.lambda_report "$FUNCTION" || echo "⚠️ Skipping import for $FUNCTION as it may not exist in state."
                   ;;
                 EC2Scanner)
-                  terraform import -allow-missing module.lambda_ec2.aws_lambda_function.ec2_scanner "$FUNCTION"
+                  terraform import module.lambda_ec2.aws_lambda_function.ec2_scanner "$FUNCTION" || echo "⚠️ Skipping import for $FUNCTION as it may not exist in state."
                   ;;
                 S3Scanner)
-                  terraform import -allow-missing module.lambda_s3.aws_lambda_function.s3_scanner "$FUNCTION"
+                  terraform import module.lambda_s3.aws_lambda_function.s3_scanner "$FUNCTION" || echo "⚠️ Skipping import for $FUNCTION as it may not exist in state."
                   ;;
               esac
             else
