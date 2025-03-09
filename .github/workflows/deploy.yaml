@@ -101,7 +101,7 @@ jobs:
           echo "🔍 Checking for existing IAM Role..."
 
           ROLE_NAME="LambdaExecutionRole"
-          ROLE_ARN=$(aws iam get-role --role-name "$ROLE_NAME" --query "Role.Arn" --output text || echo "")
+          ROLE_ARN=$(aws iam get-role --role-name "$ROLE_NAME" --query "Role.Arn" --output text 2>/dev/null || echo "")
 
           if [[ -n "$ROLE_ARN" ]]; then
             echo "✅ IAM Role $ROLE_NAME exists. Importing into Terraform..."
@@ -112,7 +112,8 @@ jobs:
             echo "⚠️ IAM Role $ROLE_NAME does not exist. Terraform will create a new one."
           fi
 
-          echo "LAMBDA_ROLE_ARN=$ROLE_ARN" >> $GITHUB_ENV
+          echo "LAMBDA_ROLE_ARN=${ROLE_ARN:-'arn:aws:iam::000000000000:role/PlaceholderRole'}" >> $GITHUB_ENV
+          # ✅ Ensures Terraform has a fallback ARN to prevent stalling
 
       - name: Deploy with Terraform
         run: |
@@ -120,7 +121,7 @@ jobs:
           terraform init
 
           echo "🔍 Running Terraform Plan..."
-          terraform plan -var="lambda_role_arn=${LAMBDA_ROLE_ARN}" -out=tfplan
+          terraform plan -var="lambda_role_arn=$LAMBDA_ROLE_ARN" -out=tfplan -input=false
           terraform show tfplan > plan.txt
           cat plan.txt
 
@@ -132,7 +133,7 @@ jobs:
             exit 1
           fi
 
-          terraform apply -var="lambda_role_arn=${LAMBDA_ROLE_ARN}" -auto-approve
+          terraform apply -var="lambda_role_arn=$LAMBDA_ROLE_ARN" -auto-approve -input=false
 
       - name: Cleanup Unused Lambda Functions (Optional)
         run: |
