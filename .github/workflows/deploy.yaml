@@ -5,9 +5,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  id-token: write # Required for AWS authentication
-  contents: read # Allows reading the repo contents
-  actions: read # Ensure workflows can read secrets
+  id-token: write
+  contents: read
+  actions: read
 
 jobs:
   deploy:
@@ -19,21 +19,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Debug Check GitHub Secrets Availability
+      - name: Debug AWS Secrets in Deploy Workflow
         run: |
-          echo "Checking if AWS credentials are available in GitHub Actions..."
+          echo "🔍 Checking AWS Secrets inside deploy.yaml..."
           if [[ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]]; then
-            echo "❌ AWS_ACCESS_KEY_ID is NOT set in GitHub Secrets!"
+            echo "❌ AWS_ACCESS_KEY_ID is NOT available in deploy.yaml!"
             exit 1
           else
-            echo "✅ AWS_ACCESS_KEY_ID is available in GitHub Secrets."
+            echo "✅ AWS_ACCESS_KEY_ID is available in deploy.yaml."
           fi
 
           if [[ -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]]; then
-            echo "❌ AWS_SECRET_ACCESS_KEY is NOT set in GitHub Secrets!"
+            echo "❌ AWS_SECRET_ACCESS_KEY is NOT available in deploy.yaml!"
             exit 1
           else
-            echo "✅ AWS_SECRET_ACCESS_KEY is available in GitHub Secrets."
+            echo "✅ AWS_SECRET_ACCESS_KEY is available in deploy.yaml."
           fi
 
       - name: Set AWS Credentials from GitHub Secrets
@@ -47,6 +47,8 @@ jobs:
       - name: Verify AWS Credentials
         run: |
           echo "🔍 Checking AWS credentials..."
+          echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:0:4}********"
+          echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:0:4}********"
           aws sts get-caller-identity
 
       - name: Setup Terraform
