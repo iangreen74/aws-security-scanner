@@ -15,13 +15,24 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials with IAM Role
+        id: configure-iam
+        continue-on-error: true # ✅ Allows fallback to static credentials if this fails
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
           role-session-name: GitHubActions
           aws-region: us-east-1
           audience: sts.amazonaws.com
+
+      - name: Configure AWS Credentials with Static Keys (Fallback)
+        if: steps.configure-iam.outcome == 'failure' # ✅ Only runs if IAM role fails
+        run: |
+          echo "⚠️ IAM authentication failed. Falling back to static credentials..."
+          echo "[default]" > ~/.aws/credentials
+          echo "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
+          echo "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
+          echo "AWS credentials configured successfully!"
 
       - name: Install Dependencies & Package Lambda Functions
         run: |
