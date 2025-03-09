@@ -43,5 +43,8 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Tests
-        run: |
-          pytest tests/
+        run: pytest tests/
+
+  deploy:
+    needs: test # Ensures 'deploy' runs only after 'test' completes successfully
+    uses: OWNER/REPO/.github/workflows/deploy.yaml@main # Calls the deploy workflow

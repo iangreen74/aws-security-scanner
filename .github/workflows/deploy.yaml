@@ -1,16 +1,12 @@
 name: Deploy AWS Security Scanner
 
 on:
-  workflow_run:
-    workflows: ['AWS Security Scanner CI']
-    types:
-      - completed
-  workflow_dispatch: # Allows manual triggering
+  workflow_call:  # Allows this workflow to be called from other workflows
+  workflow_dispatch: # Allows manual triggering from GitHub Actions UI
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
       - name: Checkout Code
@@ -22,11 +18,6 @@ jobs:
       - name: Debug: Print Current Working Directory
         run: |
           echo "📂 Current Directory: $(pwd)"
-          ls -R
-
-      - name: Debug: List all files in repo
-        run: |
-          echo "🔍 Checking repo contents in GitHub Actions..."
           ls -R
 
       - name: Debug: Check if report_generator.py exists
@@ -48,18 +39,6 @@ jobs:
           role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
           role-session-name: GitHubActions
           aws-region: us-east-1
-
-      - name: Configure AWS Credentials with Static Keys (Fallback)
-        if: steps.configure-iam.outcome == 'failure'
-        run: |
-          echo "⚠️ Falling back to static credentials..."
-          mkdir -p ~/.aws
-          echo "[default]" > ~/.aws/credentials
-          echo "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
-          echo "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
-          echo "[default]" > ~/.aws/config
-          echo "region = us-east-1" >> ~/.aws/config
-          echo "AWS credentials configured successfully!"
 
       - name: Install Dependencies & Package Lambda Functions
         run: |
