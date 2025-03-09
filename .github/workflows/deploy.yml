@@ -29,6 +29,7 @@ jobs:
         if: steps.configure-iam.outcome == 'failure' # ✅ Only runs if IAM role fails
         run: |
           echo "⚠️ IAM authentication failed. Falling back to static credentials..."
+          mkdir -p ~/.aws  # ✅ Ensure the ~/.aws directory exists before writing credentials
           echo "[default]" > ~/.aws/credentials
           echo "aws_access_key_id=${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
           echo "aws_secret_access_key=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
