@@ -15,9 +15,8 @@ module "sns" {
 }
 
 module "iam" {
-  source          = "./modules/iam"
-  sns_topic_arn   = module.sns.sns_topic_arn # ✅ Now properly defined
-  lambda_role_arn = module.iam.lambda_role_arn
+  source        = "./modules/iam"
+  sns_topic_arn = module.sns.sns_topic_arn # ✅ Now properly defined
 }
 
 module "lambda_ec2" {
