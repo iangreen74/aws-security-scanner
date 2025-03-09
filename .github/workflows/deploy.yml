@@ -41,12 +41,20 @@ jobs:
           cd deployment
           mkdir -p lambda_packages
 
-          for dir in lambda_iam lambda_report lambda_ec2 lambda_s3; do
+          declare -A lambda_files
+          lambda_files=( 
+            ["lambda_iam"]="iam_scanner.py" 
+            ["lambda_report"]="report_generator.py" 
+            ["lambda_ec2"]="ec2_scanner.py" 
+            ["lambda_s3"]="s3_scanner.py"
+          )
+
+          for dir in "${!lambda_files[@]}"; do
             mkdir -p lambda_packages/$dir
             if [[ -f terraform/modules/$dir/requirements.txt ]]; then
               pip install -r terraform/modules/$dir/requirements.txt -t lambda_packages/$dir/
             fi
-            cp src/${dir}_scanner.py lambda_packages/$dir/lambda_function.py
+            cp src/${lambda_files[$dir]} lambda_packages/$dir/lambda_function.py  # ✅ Copy correct handler
             cd lambda_packages/$dir && zip -r ../../terraform/modules/$dir/lambda_function.zip .
             cd ../../
           done
