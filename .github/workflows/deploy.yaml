@@ -95,6 +95,21 @@ jobs:
         with:
           terraform_version: 1.5.0
 
+      - name: Import Existing IAM Role into Terraform
+        run: |
+          cd deployment/terraform
+          echo "🔍 Checking for existing IAM Role..."
+
+          ROLE_NAME="LambdaExecutionRole"
+          ROLE_ARN=$(aws iam get-role --role-name "$ROLE_NAME" --query "Role.Arn" --output text || echo "")
+
+          if [[ -n "$ROLE_ARN" ]]; then
+            echo "✅ IAM Role $ROLE_NAME exists. Importing into Terraform..."
+            terraform import module.iam.aws_iam_role.lambda_exec "$ROLE_NAME" || echo "⚠️ Skipping import for $ROLE_NAME as it may not exist in state."
+          else
+            echo "⚠️ IAM Role $ROLE_NAME does not exist. Terraform will create a new one."
+          fi
+
       - name: Import Existing Lambda Functions into Terraform
         run: |
           cd deployment/terraform

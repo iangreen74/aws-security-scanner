@@ -5,8 +5,13 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
-resource "aws_iam_role" "lambda_exec" {
+data "aws_iam_role" "existing" {
   name = "LambdaExecutionRole"
+}
+
+resource "aws_iam_role" "lambda_exec" {
+  count = length(data.aws_iam_role.existing) > 0 ? 0 : 1 # ✅ Create only if it doesn't exist
+  name  = "LambdaExecutionRole"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
