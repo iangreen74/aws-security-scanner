@@ -15,7 +15,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Ensures all files are fetched
+          fetch-depth: 0 # Ensures full repository is fetched
+
+      - name: Debug File Existence
+        run: |
+          echo "🔍 Checking available files in src/"
+          ls -l src/
+          if [[ -f src/report_generator.py ]]; then
+            echo "✅ report_generator.py found!"
+          else
+            echo "❌ report_generator.py is missing!"
+            exit 1
+          fi
 
       - name: Configure AWS Credentials with IAM Role
         id: configure-iam
@@ -25,13 +36,6 @@ jobs:
           role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
           role-session-name: GitHubActions
           aws-region: us-east-1
-
-      - name: Debug IAM Role Authentication
-        if: steps.configure-iam.outcome == 'failure'
-        run: |
-          echo "❌ IAM authentication failed!"
-          echo "Check that your GitHub OIDC provider is set up in AWS IAM."
-          echo "Verify the trust policy of the role: GitHubActionsRole"
 
       - name: Configure AWS Credentials with Static Keys (Fallback)
         if: steps.configure-iam.outcome == 'failure'
@@ -44,17 +48,6 @@ jobs:
           echo "[default]" > ~/.aws/config
           echo "region = us-east-1" >> ~/.aws/config
           echo "AWS credentials configured successfully!"
-
-      - name: Debug File Existence
-        run: |
-          echo "🔍 Checking for required Lambda files..."
-          ls -R src/
-          if [[ -f src/s3_scanner.py ]]; then
-            echo "✅ s3_scanner.py found!"
-          else
-            echo "❌ s3_scanner.py is missing! Aborting deployment."
-            exit 1
-          fi
 
       - name: Install Dependencies & Package Lambda Functions
         run: |
