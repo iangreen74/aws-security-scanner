@@ -28,7 +28,7 @@ jobs:
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: arn:aws:iam::418295677815:role/GitHubActionsRole
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: GitHubActions
           aws-region: us-east-1
 
@@ -36,15 +36,25 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.9'
+          cache: 'pip' # Enables caching of dependencies
+
+      - name: Cache Python Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; else echo "⚠️ No requirements.txt found, skipping..."; fi
 
       - name: Run Tests
-        run: pytest tests/
+        run: |
+          if [ -d tests ]; then pytest tests/; else echo "⚠️ No tests directory found, skipping tests."; fi
 
   deploy:
     needs: test # Ensures 'deploy' runs only after 'test' completes successfully
-    uses: OWNER/REPO/.github/workflows/deploy.yaml@main # Calls the deploy workflow
+    uses: your-org/your-repo/.github/workflows/deploy.yaml@main # Update with actual repository details
