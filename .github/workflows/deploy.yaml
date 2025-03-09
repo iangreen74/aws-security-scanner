@@ -65,8 +65,7 @@ jobs:
             ["lambda_iam"]="iam_scanner.py" 
             ["lambda_report"]="report_generator.py" 
             ["lambda_ec2"]="ec2_scanner.py" 
-            ["lambda_s3"]="s3_scanner.py"
-          )
+            ["lambda_s3"]="s3_scanner.py")
 
           for dir in "${!lambda_files[@]}"; do
             mkdir -p lambda_packages/$dir
