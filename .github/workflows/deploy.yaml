@@ -54,7 +54,7 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Debug Existing IAM Role & Terraform State
+      - name: Debug IAM Role & Terraform State Before Import
         run: |
           set -x
           cd deployment/terraform
@@ -64,7 +64,7 @@ jobs:
           echo "🔍 Checking Terraform state before import..."
           terraform state list || echo "⚠️ No state found."
 
-      - name: Import Existing IAM Role into Terraform (With Timeout)
+      - name: **Import IAM Role Without Hanging**
         run: |
           set -x
           cd deployment/terraform
@@ -74,7 +74,13 @@ jobs:
           if [[ -n "$ROLE_ARN" ]]; then
             echo "✅ IAM Role $ROLE_NAME exists. Importing into Terraform..."
             terraform init
-            { timeout 120 terraform import module.iam.aws_iam_role.lambda_exec "$ROLE_NAME" && echo "✅ Import successful"; } || echo "⚠️ Import took too long. Skipping."
+            timeout 120 terraform import module.iam.aws_iam_role.lambda_exec "$ROLE_NAME" & disown
+            sleep 5
+
+            IMPORT_PID=$!
+            echo "🔍 Import process running with PID: $IMPORT_PID"
+            wait $IMPORT_PID || echo "⚠️ Import failed or took too long. Moving on."
+
             terraform apply -refresh-only -auto-approve || echo "⚠️ Terraform apply failed!"
           else
             echo "⚠️ IAM Role $ROLE_NAME does not exist. Terraform will create a new one."
