@@ -44,7 +44,7 @@ jobs:
 
   deploy:
     needs: test # Ensures 'deploy' runs only after 'test' completes successfully
-    uses: OWNER/REPO/.github/workflows/deploy.yaml@main # Calls the deploy workflow
+    uses: ./.github/workflows/deploy.yaml # Calls deploy.yaml in the same repo
     secrets:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
