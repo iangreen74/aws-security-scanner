@@ -17,14 +17,14 @@ jobs:
         with:
           fetch-depth: 0 # Ensures full repository is fetched
 
-      - name: Debug File Existence
+      - name: Debug File Existence in GitHub Actions
         run: |
           echo "🔍 Checking available files in src/"
-          ls -l src/
+          ls -lah src/
           if [[ -f src/report_generator.py ]]; then
             echo "✅ report_generator.py found!"
           else
-            echo "❌ report_generator.py is missing!"
+            echo "❌ report_generator.py is missing in GitHub Actions!"
             exit 1
           fi
 
@@ -69,6 +69,7 @@ jobs:
             fi
             
             if [[ -f src/${lambda_files[$dir]} ]]; then
+              echo "✅ Copying src/${lambda_files[$dir]} to lambda_packages/$dir/"
               cp src/${lambda_files[$dir]} lambda_packages/$dir/lambda_function.py
               cd lambda_packages/$dir && zip -r ../../terraform/modules/$dir/lambda_function.zip .
               cd ../../
