@@ -14,7 +14,8 @@ module "sns" {
 }
 
 module "iam" {
-  source = "./modules/iam"
+  source        = "./modules/iam"
+  sns_topic_arn = module.sns.sns_topic_arn # ✅ Now properly defined
 }
 
 module "lambda_ec2" {
@@ -31,7 +32,7 @@ module "lambda_s3" {
 
 module "lambda_iam" {
   source                 = "./modules/lambda_iam"
-  lambda_role_arn        = module.iam.lambda_role_arn # ✅ Use IAM module output
+  lambda_role_arn        = module.iam.lambda_role_arn
   lambda_suffix          = random_string.lambda_suffix.result
   sns_topic_arn          = module.sns.sns_topic_arn
   security_report_bucket = module.lambda_s3.bucket_name
@@ -39,7 +40,7 @@ module "lambda_iam" {
 
 module "lambda_report" {
   source                = "./modules/lambda_report"
-  lambda_role_arn       = module.iam.lambda_role_arn # ✅ Use IAM module output
+  lambda_role_arn       = module.iam.lambda_role_arn
   lambda_suffix         = random_string.lambda_suffix.result
   sns_topic_arn         = module.sns.sns_topic_arn
   lambda_sns_policy_arn = module.iam.lambda_sns_policy_arn
