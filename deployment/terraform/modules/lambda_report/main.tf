@@ -1,14 +1,18 @@
 resource "aws_lambda_function" "lambda_report" {
-  function_name    = "ReportGenerator"
-  role             = var.lambda_role_arn
-  handler          = "lambda_function.lambda_handler"
-  runtime          = "python3.9"
-  filename         = "${path.module}/lambda_function.zip"                   # ✅ Ensure file exists
-  source_code_hash = filebase64sha256("${path.module}/lambda_function.zip") # ✅ Compute hash
+  function_name = "ReportGenerator-${random_string.lambda_suffix.result}"
+  role          = aws_iam_role.lambda_exec.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.9"
 
-  environment {
-    variables = {
-      SNS_TOPIC_ARN = var.sns_topic_arn
-    }
+  filename         = "${path.module}/lambda_function.zip"
+  source_code_hash = filebase64sha256("${path.module}/lambda_function.zip")
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  timeouts {
+    create = "5m"
+    update = "5m"
   }
 }
