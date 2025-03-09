@@ -112,13 +112,15 @@ jobs:
             echo "⚠️ IAM Role $ROLE_NAME does not exist. Terraform will create a new one."
           fi
 
+          echo "LAMBDA_ROLE_ARN=$ROLE_ARN" >> $GITHUB_ENV
+
       - name: Deploy with Terraform
         run: |
           cd deployment/terraform
           terraform init
 
           echo "🔍 Running Terraform Plan..."
-          terraform plan -var="lambda_role_arn=$ROLE_ARN" -out=tfplan
+          terraform plan -var="lambda_role_arn=${LAMBDA_ROLE_ARN}" -out=tfplan
           terraform show tfplan > plan.txt
           cat plan.txt
 
@@ -130,7 +132,7 @@ jobs:
             exit 1
           fi
 
-          terraform apply -var="lambda_role_arn=$ROLE_ARN" -auto-approve
+          terraform apply -var="lambda_role_arn=${LAMBDA_ROLE_ARN}" -auto-approve
 
       - name: Cleanup Unused Lambda Functions (Optional)
         run: |
