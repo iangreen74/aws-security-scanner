@@ -15,16 +15,27 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Ensures full repository is fetched
+          fetch-depth: 0
+          lfs: true
 
-      - name: Debug File Existence in GitHub Actions
+      - name: Debug: Print Current Working Directory
         run: |
-          echo "🔍 Checking available files in src/"
-          ls -lah src/
+          echo "📂 Current Directory: $(pwd)"
+          ls -R
+
+      - name: Debug: List all files in repo
+        run: |
+          echo "🔍 Checking repo contents in GitHub Actions..."
+          ls -R
+
+      - name: Debug: Check if report_generator.py exists
+        run: |
+          echo "🔍 Checking for src/report_generator.py..."
+          ls -l src/
           if [[ -f src/report_generator.py ]]; then
             echo "✅ report_generator.py found!"
           else
-            echo "❌ report_generator.py is missing in GitHub Actions!"
+            echo "❌ report_generator.py is missing!"
             exit 1
           fi
 
