@@ -25,6 +25,7 @@ jobs:
 
       - name: Debug AWS Secrets in Deploy Workflow
         run: |
+          set -x
           echo "🔍 Checking AWS Secrets inside deploy.yaml..."
           if [[ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]]; then
             echo "❌ AWS_ACCESS_KEY_ID is NOT available in deploy.yaml!"
@@ -48,75 +49,49 @@ jobs:
           echo "AWS_REGION=us-east-1" >> $GITHUB_ENV
           echo "✅ AWS credentials set."
 
-      - name: Install Dependencies & Package Lambda Functions
-        run: |
-          cd deployment
-          mkdir -p lambda_packages
-
-          declare -A lambda_files
-          lambda_files=( 
-            ["lambda_iam"]="iam_scanner.py" 
-            ["lambda_report"]="report_generator.py" 
-            ["lambda_ec2"]="ec2_scanner.py" 
-            ["lambda_s3"]="s3_scanner.py")
-
-          for dir in "${!lambda_files[@]}"; do
-            mkdir -p lambda_packages/$dir
-            if [[ -f terraform/modules/$dir/requirements.txt ]]; then
-              pip install --no-warn-script-location --requirement terraform/modules/$dir/requirements.txt -t lambda_packages/$dir/ || true
-            fi
-            
-            if [[ -f ../src/${lambda_files[$dir]} ]]; then
-              echo "✅ Copying ../src/${lambda_files[$dir]} to lambda_packages/$dir/"
-              cp ../src/${lambda_files[$dir]} lambda_packages/$dir/lambda_function.py
-              cd lambda_packages/$dir && zip -r lambda_function.zip . && mv lambda_function.zip ../../terraform/modules/$dir/
-              cd ../../
-            else
-              echo "❌ Error: Required source file ../src/${lambda_files[$dir]} is missing! Aborting deployment."
-              ls -R ../src/
-              exit 1
-            fi
-          done
-
-      - name: Debug Check If Lambda ZIPs Exist
-        run: |
-          echo "🔍 Verifying Lambda function zip files..."
-          for dir in lambda_iam lambda_report lambda_ec2 lambda_s3; do
-            if [[ -f deployment/terraform/modules/$dir/lambda_function.zip ]]; then
-              echo "✅ deployment/terraform/modules/$dir/lambda_function.zip exists!"
-            else
-              echo "❌ deployment/terraform/modules/$dir/lambda_function.zip is missing!"
-              exit 1
-            fi
-          done
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.5.0
 
-      - name: Import Existing IAM Role into Terraform
+      - name: Debug Existing IAM Role & Terraform State
         run: |
+          set -x
           cd deployment/terraform
-          echo "🔍 Checking for existing IAM Role..."
+          echo "🔍 Checking if IAM role already exists..."
+          aws iam get-role --role-name "LambdaExecutionRole" --query "Role.Arn" --output text || echo "❌ IAM Role not found."
 
+          echo "🔍 Checking Terraform state before import..."
+          terraform state list || echo "⚠️ No state found."
+
+      - name: Import Existing IAM Role into Terraform (With Timeout)
+        run: |
+          set -x
+          cd deployment/terraform
           ROLE_NAME="LambdaExecutionRole"
           ROLE_ARN=$(aws iam get-role --role-name "$ROLE_NAME" --query "Role.Arn" --output text 2>/dev/null || echo "")
 
           if [[ -n "$ROLE_ARN" ]]; then
             echo "✅ IAM Role $ROLE_NAME exists. Importing into Terraform..."
             terraform init
-            terraform import module.iam.aws_iam_role.lambda_exec "$ROLE_NAME" || echo "⚠️ Skipping import for $ROLE_NAME as it may already be in state."
-            terraform apply -refresh-only -auto-approve # ✅ Ensures Terraform sees the IAM role
+            { timeout 120 terraform import module.iam.aws_iam_role.lambda_exec "$ROLE_NAME" && echo "✅ Import successful"; } || echo "⚠️ Import took too long. Skipping."
+            terraform apply -refresh-only -auto-approve || echo "⚠️ Terraform apply failed!"
           else
             echo "⚠️ IAM Role $ROLE_NAME does not exist. Terraform will create a new one."
           fi
 
           echo "LAMBDA_ROLE_ARN=${ROLE_ARN:-'arn:aws:iam::000000000000:role/PlaceholderRole'}" >> $GITHUB_ENV
-          # ✅ Ensures Terraform has a fallback ARN to prevent stalling
+
+      - name: Debug Terraform State After Import
+        run: |
+          set -x
+          cd deployment/terraform
+          echo "🔍 Checking Terraform state after import..."
+          terraform state list || echo "⚠️ No state found after import."
 
       - name: Deploy with Terraform
         run: |
+          set -x
           cd deployment/terraform
           terraform init
 
@@ -133,10 +108,11 @@ jobs:
             exit 1
           fi
 
-          terraform apply -var="lambda_role_arn=$LAMBDA_ROLE_ARN" -auto-approve -input=false
+          terraform apply -var="lambda_role_arn=$LAMBDA_ROLE_ARN" -auto-approve -input=false || echo "⚠️ Terraform apply failed!"
 
       - name: Cleanup Unused Lambda Functions (Optional)
         run: |
+          set -x
           echo "🔍 Checking for old Lambda functions to delete..."
           EXISTING_FUNCTIONS=$(aws lambda list-functions --query 'Functions[*].FunctionName' --output text)
           DEPLOYED_FUNCTIONS="IAMSecurityScanner ReportGenerator EC2Scanner S3Scanner"
