@@ -11,6 +11,7 @@ resource "random_string" "lambda_suffix" {
 module "sns" {
   source             = "./modules/sns"
   notification_email = "mikahiangreen@gmail.com"
+  lambda_role_arn    = module.iam.lambda_role_arn
 }
 
 module "iam" {
