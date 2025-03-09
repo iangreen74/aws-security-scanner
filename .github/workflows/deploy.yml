@@ -5,6 +5,7 @@ on:
     workflows: ['AWS Security Scanner CI']
     types:
       - completed
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
   deploy:
