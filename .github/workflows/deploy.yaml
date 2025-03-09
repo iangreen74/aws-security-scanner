@@ -41,12 +41,14 @@ jobs:
 
       - name: Configure AWS Credentials with IAM Role
         id: configure-iam
-        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: GitHubActions
           aws-region: us-east-1
+
+      - name: Verify AWS Credentials
+        run: aws sts get-caller-identity
 
       - name: Install Dependencies & Package Lambda Functions
         run: |
@@ -86,6 +88,11 @@ jobs:
 
       - name: Deploy with Terraform
         run: |
+          export AWS_REGION=us-east-1
+          export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)
+          export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)
+          export AWS_SESSION_TOKEN=$(aws configure get aws_session_token)
+
           cd deployment/terraform
           terraform init
           terraform apply -auto-approve
